@@ -715,6 +715,7 @@ namespace aiCorporation.NewImproved
             AccountNumber = accountNumber;
             SortCode = sortCode;
         }
+
     }
 
 }
