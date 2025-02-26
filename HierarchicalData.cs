@@ -670,4 +670,51 @@ namespace aiCorporation.NewImproved
             return (lbaBankAccountList);
         }
     }
+
+    public abstract class TreeNode
+    {
+        public string Id { get; protected set; }
+        public List<TreeNode> Children { get; } = new List<TreeNode>();
+    }
+
+    public class SalesAgentNode : TreeNode
+    {
+        public string SalesAgentName { get; set; }
+        public string SalesAgentEmailAddress { get; set; }
+
+        public SalesAgentNode(string email)
+        {
+            Id = email;
+            SalesAgentEmailAddress = email;
+        }
+    }
+
+    public class ClientNode : TreeNode
+    {
+        public string ClientName { get; set; }
+        public string ClientIdentifier { get; set; }
+
+        public ClientNode(string identifier)
+        {
+            Id = identifier;
+            ClientIdentifier = identifier;
+        }
+    }
+
+    public class BankAccountNode : TreeNode
+    {
+        public string BankName { get; set; }
+        public string AccountNumber { get; set; }
+        public string SortCode { get; set; }
+        public string Currency { get; set; }
+
+        public BankAccountNode(string bankName, string accountNumber, string sortCode)
+        {
+            Id = $"{bankName}|{accountNumber}|{sortCode}";
+            BankName = bankName;
+            AccountNumber = accountNumber;
+            SortCode = sortCode;
+        }
+    }
+
 }

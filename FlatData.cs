@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using CsvHelper;
 
@@ -192,7 +191,61 @@ namespace aiCorporation.NewImproved
         /************************************************************/
         public SalesAgentList ToSalesAgentList()
         {
-            throw new NotImplementedException("You must implement this function");
+            var salesAgentDict = new Dictionary<string, SalesAgentNode>();
+
+            foreach (var record in m_lsafrSalesAgentFileRecordList)
+            {
+                if (!salesAgentDict.TryGetValue(record.SalesAgentEmailAddress, out var salesAgentNode))
+                {
+                    salesAgentNode = new SalesAgentNode(record.SalesAgentEmailAddress);
+                    salesAgentNode.SalesAgentName = record.SalesAgentName;
+
+                    salesAgentDict[record.SalesAgentEmailAddress] = salesAgentNode;
+                }
+
+                var clientNode = salesAgentNode.Children.OfType<ClientNode>().FirstOrDefault(c => c.ClientIdentifier == record.ClientIdentifier);
+
+                if (clientNode == null)
+                {
+                    clientNode = new ClientNode(record.ClientIdentifier);
+                    clientNode.ClientName = record.ClientName;
+                    salesAgentNode.Children.Add(clientNode);
+                }
+
+                var bankAccountNode = clientNode.Children.OfType<BankAccountNode>().FirstOrDefault(b => b.BankName == record.BankName && b.AccountNumber == record.AccountNumber && b.SortCode == record.SortCode);
+
+                if (bankAccountNode == null)
+                {
+                    bankAccountNode = new BankAccountNode(record.BankName, record.AccountNumber, record.SortCode);
+                    bankAccountNode.Currency = record.Currency;
+                    clientNode.Children.Add(bankAccountNode);
+                }
+            }
+
+            var salesAgentList = new List<SalesAgent>(salesAgentDict.Count);
+
+            foreach (var salesAgentNode in salesAgentDict.Values)
+            {
+                var clients = salesAgentNode.Children.OfType<ClientNode>()
+                    .Select(clientNode => new Client(
+                        clientNode.ClientName,
+                        clientNode.ClientIdentifier,
+                        clientNode.Children.OfType<BankAccountNode>()
+                            .Select(bankAccountNode => new BankAccount(
+                                bankAccountNode.BankName,
+                                bankAccountNode.AccountNumber,
+                                bankAccountNode.SortCode,
+                                bankAccountNode.Currency))
+                            .ToList()))
+                    .ToList();
+
+                salesAgentList.Add(new SalesAgent(
+                    salesAgentNode.SalesAgentName,
+                    salesAgentNode.SalesAgentEmailAddress,
+                    clients));
+            }
+
+            return new SalesAgentList(salesAgentList);
         }
 
         public SalesAgentFileRecordList(List<SalesAgentFileRecord> lsafrSalesAgentFileRecordList)
